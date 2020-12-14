@@ -13,6 +13,7 @@ class GoogleSheets implements Publisher
 {
     const DEFAULT_SPREADSHEET_ID = '1szsifLaLNsGxLDeDcZD0z0dNM0vQLwQ2UJU6DASa33s';
     const OPTION_SPREADSHEET_ID = 'spreadsheetId';
+    const GOOGLE_API_TOKEN_ENV = 'GOOGLE_API_TOKEN';
 
     private $service;
 
@@ -53,45 +54,29 @@ class GoogleSheets implements Publisher
     private function getClient()
     {
         $client = new Google_Client();
-//        $client->setApplicationName($appName);
         $client->setScopes(Google_Service_Sheets::SPREADSHEETS);
         $client->setAuthConfig(json_decode(getenv('GOOGLE_API_CREDENTIALS'), true));
         $client->setAccessType('offline');
         $client->setPrompt('select_account consent');
+        $this->setAccessTokenFromEnv($client);
+        $client->isAccessTokenExpired() && $this->refreshAccessToken($client);
+        return $client;
+    }
 
-        $token = getenv('GOOGLE_API_TOKEN');
+    private function setAccessTokenFromEnv(Google_Client $client)
+    {
+        $token = getenv(self::GOOGLE_API_TOKEN_ENV);
         if ($token) {
             $accessToken = json_decode($token, true);
             $client->setAccessToken($accessToken);
         }
+    }
 
-        // If there is no previous token or it's expired.
-        if ($client->isAccessTokenExpired()) {
-            // Refresh the token if possible, else fetch a new one.
-            if ($client->getRefreshToken()) {
-                $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
-            } else {
-                // Request authorization from the user.
-                $authUrl = $client->createAuthUrl();
-                printf("Open the following link in your browser:\n%s\n", $authUrl);
-                print 'Enter verification code: ';
-                $authCode = trim(fgets(STDIN));
-
-                // Exchange authorization code for an access token.
-                $accessToken = $client->fetchAccessTokenWithAuthCode($authCode);
-                $client->setAccessToken($accessToken);
-
-                // Check to see if there was an error.
-                if (array_key_exists('error', $accessToken)) {
-                    throw new Google\Exception(join(', ', $accessToken));
-                }
-            }
-
-            $newToken = json_encode($client->getAccessToken());
-            putenv("GOOGLE_API_TOKEN='$newToken'");
-        }
-
-        return $client;
+    private function refreshAccessToken(Google_Client $client)
+    {
+        $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
+        $newToken = json_encode($client->getAccessToken());
+        putenv(self::GOOGLE_API_TOKEN_ENV . "='$newToken'");
     }
 
     private function getResultMessage(Google_Service_Sheets_AppendValuesResponse $response, array $row)
