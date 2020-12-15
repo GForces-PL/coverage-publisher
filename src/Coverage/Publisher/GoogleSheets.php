@@ -24,7 +24,8 @@ class GoogleSheets implements Publisher
     public function publish($appName, $coverage)
     {
         $spreadsheet = $this->getService()->spreadsheets_values;
-        $row = [strftime('%d/%m/%Y'), $coverage];
+        $coverageArray = is_array($coverage) ? $coverage : [$coverage];
+        $row = array_merge([strftime('%d/%m/%Y')], $coverageArray);
         $response = $spreadsheet->append(
             getenv(self::SPREADSHEET_ID_ENV),
             $appName,

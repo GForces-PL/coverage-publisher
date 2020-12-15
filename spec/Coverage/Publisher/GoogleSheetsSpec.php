@@ -53,6 +53,16 @@ describe(GoogleSheets::class, function () {
             $this->publisher->publish('V10', 87.9);
         });
 
+        it('accepts coverage as array', function () {
+            $response = $this->response;
+            allow($this->service->spreadsheets_values)->toReceive('append')->andRun(function () use ($response) {
+                $postBody = func_get_arg(2);
+                expect($postBody->getValues())->toEqual([['14/12/2020', '', '', 80.65, '15493/19209', 65.98, '7466/11315', 13.86, '8975/64768', 'N/A', 83.85, 90]]);
+                return $response;
+            });
+            $this->publisher->publish('V10', ['', '', 80.65, '15493/19209', 65.98, '7466/11315', 13.86, '8975/64768', 'N/A', 83.85, 90]);
+        });
+
         it('returns message containing details on appended row', function () {
             allow($this->service->spreadsheets_values)->toReceive('append')->andReturn($this->response);
             $this->updates->updatedCells = 2;
