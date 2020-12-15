@@ -1,0 +1,15 @@
+{
+  "name": "gforces-pl/coverage-publisher",
+  "require": {
+    "php": ">=5.5.0",
+    "google/apiclient": "^2.8"
+  },
+  "require-dev": {
+    "kahlan/kahlan": "^4.7"
+  },
+  "autoload": {
+    "psr-0": {
+      "": "src"
+    }
+  }
+}
