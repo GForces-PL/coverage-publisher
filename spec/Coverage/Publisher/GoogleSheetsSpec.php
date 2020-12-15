@@ -36,6 +36,7 @@ describe(GoogleSheets::class, function () {
         });
 
         it('passes appropriate values to the service', function () {
+            allow('getenv')->toBeCalled()->with(GoogleSheets::SPREADSHEET_ID_ENV)->andReturn('abc123');
             $response = $this->response;
             allow($this->service->spreadsheets_values)->toReceive('append')->andRun(function (
                 $spreadsheetId,
@@ -43,7 +44,7 @@ describe(GoogleSheets::class, function () {
                 Google_Service_Sheets_ValueRange $postBody,
                 $optParams
             ) use ($response) {
-                expect($spreadsheetId)->toEqual(GoogleSheets::DEFAULT_SPREADSHEET_ID);
+                expect($spreadsheetId)->toEqual('abc123');
                 expect($range)->toEqual('V10');
                 expect($postBody->getValues())->toEqual([['14/12/2020', 87.9]]);
                 expect($optParams)->toEqual(['valueInputOption' => 'USER_ENTERED']);

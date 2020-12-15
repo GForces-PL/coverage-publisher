@@ -11,9 +11,9 @@ use Google_Service_Sheets_ValueRange;
 
 class GoogleSheets implements Publisher
 {
-    const DEFAULT_SPREADSHEET_ID = '1szsifLaLNsGxLDeDcZD0z0dNM0vQLwQ2UJU6DASa33s';
-    const OPTION_SPREADSHEET_ID = 'spreadsheetId';
-    const GOOGLE_API_TOKEN_ENV = 'GOOGLE_API_TOKEN';
+    const SPREADSHEET_ID_ENV = 'GOOGLE_SPREADSHEET_ID';
+    const API_TOKEN_ENV = 'GOOGLE_API_TOKEN';
+    const API_CREDENTIALS_ENV = 'GOOGLE_API_CREDENTIALS';
 
     private $service;
 
@@ -21,12 +21,12 @@ class GoogleSheets implements Publisher
      * @inheritdoc
      * @throws Google\Exception
      */
-    public function publish($appName, $coverage, array $options = [self::OPTION_SPREADSHEET_ID => self::DEFAULT_SPREADSHEET_ID])
+    public function publish($appName, $coverage)
     {
         $spreadsheet = $this->getService()->spreadsheets_values;
         $row = [strftime('%d/%m/%Y'), $coverage];
         $response = $spreadsheet->append(
-            $options[self::OPTION_SPREADSHEET_ID],
+            getenv(self::SPREADSHEET_ID_ENV),
             $appName,
             new Google_Service_Sheets_ValueRange(['values' => [$row]]),
             ['valueInputOption' => 'USER_ENTERED']
@@ -55,7 +55,7 @@ class GoogleSheets implements Publisher
     {
         $client = new Google_Client();
         $client->setScopes(Google_Service_Sheets::SPREADSHEETS);
-        $client->setAuthConfig(json_decode(getenv('GOOGLE_API_CREDENTIALS'), true));
+        $client->setAuthConfig(json_decode(getenv(self::API_CREDENTIALS_ENV), true));
         $client->setAccessType('offline');
         $client->setPrompt('select_account consent');
         $this->setAccessTokenFromEnv($client);
@@ -65,7 +65,7 @@ class GoogleSheets implements Publisher
 
     private function setAccessTokenFromEnv(Google_Client $client)
     {
-        $token = getenv(self::GOOGLE_API_TOKEN_ENV);
+        $token = getenv(self::API_TOKEN_ENV);
         if ($token) {
             $accessToken = json_decode($token, true);
             $client->setAccessToken($accessToken);
@@ -76,7 +76,7 @@ class GoogleSheets implements Publisher
     {
         $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
         $newToken = json_encode($client->getAccessToken());
-        putenv(self::GOOGLE_API_TOKEN_ENV . "='$newToken'");
+        putenv(self::API_TOKEN_ENV . "='$newToken'");
     }
 
     private function getResultMessage(Google_Service_Sheets_AppendValuesResponse $response, array $row)
