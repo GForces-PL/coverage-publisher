@@ -2,7 +2,7 @@
   "name": "gforces-pl/coverage-publisher",
   "require": {
     "php": ">=5.5.0",
-    "google/apiclient": "^2.8"
+    "google/apiclient": ">=1.1.1"
   },
   "require-dev": {
     "kahlan/kahlan": "^4.7"
