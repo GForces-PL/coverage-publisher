@@ -71,5 +71,16 @@ describe(GoogleSheets::class, function () {
                 "Appended 2 cells at 'V10'!A3:B3 with: 14/12/2020, 87.9"
             );
         });
+
+        context('when exception is thrown by service', function () {
+            it('returns failure message containing details on the exception', function () {
+                allow($this->service->spreadsheets_values)->toReceive('append')->andRun(function () {
+                    throw new \Google\Exception('something went wrong');
+                });
+                expect($this->publisher->publish('V10', 87.9))->toEqual(
+                    'Failed to publish coverage: something went wrong'
+                );
+            });
+        });
     });
 });

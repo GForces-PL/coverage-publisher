@@ -19,9 +19,23 @@ class GoogleSheets implements Publisher
 
     /**
      * @inheritdoc
-     * @throws Google\Exception
      */
     public function publish($appName, $coverage)
+    {
+        try {
+            return $this->send($appName, $coverage);
+        } catch (\Exception $e) {
+            return "Failed to publish coverage: {$e->getMessage()}";
+        }
+    }
+
+    /**
+     * @param string $appName
+     * @param float|array $coverage
+     * @return string
+     * @throws Google\Exception
+     */
+    private function send($appName, $coverage)
     {
         $spreadsheet = $this->getService()->spreadsheets_values;
         $coverageArray = is_array($coverage) ? $coverage : [$coverage];
