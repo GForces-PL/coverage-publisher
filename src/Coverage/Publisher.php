@@ -5,9 +5,9 @@ namespace Coverage;
 interface Publisher
 {
     /**
-     * @param string $appName
+     * @param string $a1NotationRange
      * @param float|array $coverage
      * @return string Result message
      */
-    public function publish($appName, $coverage);
+    public function publish($a1NotationRange, $coverage);
 }

@@ -4,8 +4,8 @@ date_default_timezone_set('Europe/London');
 
 if (count($argv) < 3) {
     echo <<<USAGE
-Usage: php src/scripts/publish-coverage.php APP_NAME CLOVER_XML_FILE_PATH
-   eg. php src/scripts/publish-coverage.php "NEM API" /tmp/clover.xml\n
+Usage: php src/scripts/publish-coverage.php A1_NOTATION_RANGE CLOVER_XML_FILE_PATH
+   eg. php src/scripts/publish-coverage.php "'NEM API'!A3" /tmp/clover.xml\n
 USAGE;
     exit(1);
 }

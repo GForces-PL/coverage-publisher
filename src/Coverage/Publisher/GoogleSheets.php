@@ -20,29 +20,29 @@ class GoogleSheets implements Publisher
     /**
      * @inheritdoc
      */
-    public function publish($appName, $coverage)
+    public function publish($a1NotationRange, $coverage)
     {
         try {
-            return $this->send($appName, $coverage);
+            return $this->send($a1NotationRange, $coverage);
         } catch (\Exception $e) {
             return "Failed to publish coverage: {$e->getMessage()}";
         }
     }
 
     /**
-     * @param string $appName
+     * @param string $a1NotationRange
      * @param float|array $coverage
      * @return string
      * @throws Google\Exception
      */
-    private function send($appName, $coverage)
+    private function send($a1NotationRange, $coverage)
     {
         $spreadsheet = $this->getService()->spreadsheets_values;
         $coverageArray = is_array($coverage) ? $coverage : [$coverage];
         $row = array_merge([strftime('%d/%m/%Y')], $coverageArray);
         $response = $spreadsheet->append(
             getenv(self::SPREADSHEET_ID_ENV),
-            $appName,
+            $a1NotationRange,
             new Google_Service_Sheets_ValueRange(['values' => [$row]]),
             ['valueInputOption' => 'USER_ENTERED']
         );
