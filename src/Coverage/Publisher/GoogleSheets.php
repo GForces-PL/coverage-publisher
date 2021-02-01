@@ -80,15 +80,19 @@ class GoogleSheets implements Publisher
 
     private function getAuthConfig()
     {
-        $json = getenv(self::API_CREDENTIALS_ENV);
-        return preg_match('/^1\./', Google_Client::LIBVER) ? $json : json_decode($json, true);
+        $credentials = getenv(self::API_CREDENTIALS_ENV);
+        return $this->getJson($credentials);
+    }
+
+    private function getJson($string) {
+        return preg_match('/^1\./', Google_Client::LIBVER) ? $string : json_decode($string, true);
     }
 
     private function setAccessTokenFromEnv(Google_Client $client)
     {
         $token = getenv(self::API_TOKEN_ENV);
         if ($token) {
-            $accessToken = json_decode($token, true);
+            $accessToken = $this->getJson($token);
             $client->setAccessToken($accessToken);
         }
     }
