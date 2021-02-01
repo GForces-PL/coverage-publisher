@@ -37,15 +37,9 @@ class GoogleSheets implements Publisher
      */
     private function send($a1NotationRange, $coverage)
     {
-        $spreadsheet = $this->getService()->spreadsheets_values;
         $coverageArray = is_array($coverage) ? $coverage : [$coverage];
         $row = array_merge([strftime('%d/%m/%Y')], $coverageArray);
-        $response = $spreadsheet->append(
-            getenv(self::SPREADSHEET_ID_ENV),
-            $a1NotationRange,
-            new Google_Service_Sheets_ValueRange(['values' => [$row]]),
-            ['valueInputOption' => 'USER_ENTERED']
-        );
+        $response = $this->append($row, $a1NotationRange);
         return $this->getResultMessage($response, $row);
     }
 
@@ -84,7 +78,8 @@ class GoogleSheets implements Publisher
         return $this->getJson($credentials);
     }
 
-    private function getJson($string) {
+    private function getJson($string)
+    {
         return preg_match('/^1\./', Google_Client::LIBVER) ? $string : json_decode($string, true);
     }
 
@@ -102,6 +97,18 @@ class GoogleSheets implements Publisher
         $client->refreshToken($client->getRefreshToken());
         $newToken = json_encode($client->getAccessToken());
         putenv(self::API_TOKEN_ENV . "='$newToken'");
+    }
+
+    private function append(array $row, $a1NotationRange)
+    {
+        $spreadsheet = $this->getService()->spreadsheets_values;
+        $params = [
+            'spreadsheetId' => getenv(self::SPREADSHEET_ID_ENV),
+            'range' => $a1NotationRange,
+            'postBody' => new Google_Service_Sheets_ValueRange(['values' => [$row]]),
+            'valueInputOption' => 'USER_ENTERED',
+        ];
+        return $spreadsheet->call('append', [$params], Google_Service_Sheets_AppendValuesResponse::class);
     }
 
     private function getResultMessage(Google_Service_Sheets_AppendValuesResponse $response, array $row)
