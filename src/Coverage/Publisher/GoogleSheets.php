@@ -37,9 +37,15 @@ class GoogleSheets implements Publisher
      */
     private function send($a1NotationRange, $coverage)
     {
+        $spreadsheet = $this->getService()->spreadsheets_values;
         $coverageArray = is_array($coverage) ? $coverage : [$coverage];
         $row = array_merge([strftime('%d/%m/%Y')], $coverageArray);
-        $response = $this->append($row, $a1NotationRange);
+        $response = $spreadsheet->append(
+            getenv(self::SPREADSHEET_ID_ENV),
+            $a1NotationRange,
+            new Google_Service_Sheets_ValueRange(['values' => [$row]]),
+            ['valueInputOption' => 'USER_ENTERED']
+        );
         return $this->getResultMessage($response, $row);
     }
 
@@ -75,40 +81,23 @@ class GoogleSheets implements Publisher
     private function getAuthConfig()
     {
         $credentials = getenv(self::API_CREDENTIALS_ENV);
-        return $this->getJson($credentials);
-    }
-
-    private function getJson($string)
-    {
-        return preg_match('/^1\./', Google_Client::LIBVER) ? $string : json_decode($string, true);
+        return json_decode($credentials, true);
     }
 
     private function setAccessTokenFromEnv(Google_Client $client)
     {
         $token = getenv(self::API_TOKEN_ENV);
         if ($token) {
-            $accessToken = $this->getJson($token);
+            $accessToken = json_decode($token, true);
             $client->setAccessToken($accessToken);
         }
     }
 
     private function refreshAccessToken(Google_Client $client)
     {
-        $client->refreshToken($client->getRefreshToken());
+        $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
         $newToken = json_encode($client->getAccessToken());
         putenv(self::API_TOKEN_ENV . "='$newToken'");
-    }
-
-    private function append(array $row, $a1NotationRange)
-    {
-        $spreadsheet = $this->getService()->spreadsheets_values;
-        $params = [
-            'spreadsheetId' => getenv(self::SPREADSHEET_ID_ENV),
-            'range' => $a1NotationRange,
-            'postBody' => new Google_Service_Sheets_ValueRange(['values' => [$row]]),
-            'valueInputOption' => 'USER_ENTERED',
-        ];
-        return $spreadsheet->call('append', [$params], Google_Service_Sheets_AppendValuesResponse::class);
     }
 
     private function getResultMessage(Google_Service_Sheets_AppendValuesResponse $response, array $row)

@@ -30,25 +30,24 @@ describe(GoogleSheets::class, function () {
         });
 
         it('publishes coverage via Google service', function () {
-            allow($this->service->spreadsheets_values)->toReceive('call')->andReturn($this->response);
-            expect($this->service->spreadsheets_values)->toReceive('call')->with('append');
+            allow($this->service->spreadsheets_values)->toReceive('append')->andReturn($this->response);
+            expect($this->service->spreadsheets_values)->toReceive('append');
             $this->publisher->publish('', 0);
         });
 
         it('passes appropriate values to the service', function () {
             allow('getenv')->toBeCalled()->with(GoogleSheets::SPREADSHEET_ID_ENV)->andReturn('abc123');
             $response = $this->response;
-            allow($this->service->spreadsheets_values)->toReceive('call')->andRun(function (
-                $name,
-                $arguments,
-                $expectedClass
+            allow($this->service->spreadsheets_values)->toReceive('append')->andRun(function (
+                $spreadsheetId,
+                $range,
+                Google_Service_Sheets_ValueRange $postBody,
+                $optParams
             ) use ($response) {
-                expect($name)->toEqual('append');
-                expect($arguments[0]['spreadsheetId'])->toEqual('abc123');
-                expect($arguments[0]['range'])->toEqual('V10');
-                expect($arguments[0]['postBody']->getValues())->toEqual([['14/12/2020', 87.9]]);
-                expect($arguments[0]['valueInputOption'])->toEqual('USER_ENTERED');
-                expect($expectedClass)->toEqual(Google_Service_Sheets_AppendValuesResponse::class);
+                expect($spreadsheetId)->toEqual('abc123');
+                expect($range)->toEqual('V10');
+                expect($postBody->getValues())->toEqual([['14/12/2020', 87.9]]);
+                expect($optParams)->toEqual(['valueInputOption' => 'USER_ENTERED']);
                 return $response;
             });
             $this->publisher->publish('V10', 87.9);
@@ -56,8 +55,8 @@ describe(GoogleSheets::class, function () {
 
         it('accepts coverage as array', function () {
             $response = $this->response;
-            allow($this->service->spreadsheets_values)->toReceive('call')->andRun(function ($name, $arguments) use ($response) {
-                $postBody = $arguments[0]['postBody'];
+            allow($this->service->spreadsheets_values)->toReceive('append')->andRun(function () use ($response) {
+                $postBody = func_get_arg(2);
                 expect($postBody->getValues())->toEqual([['14/12/2020', '', '', 80.65, '15493/19209', 65.98, '7466/11315', 13.86, '8975/64768', 'N/A', 83.85, 90]]);
                 return $response;
             });
@@ -65,7 +64,7 @@ describe(GoogleSheets::class, function () {
         });
 
         it('returns message containing details on appended row', function () {
-            allow($this->service->spreadsheets_values)->toReceive('call')->andReturn($this->response);
+            allow($this->service->spreadsheets_values)->toReceive('append')->andReturn($this->response);
             $this->updates->updatedCells = 2;
             $this->updates->updatedRange = "'V10'!A3:B3";
             expect($this->publisher->publish('V10', 87.9))->toEqual(
@@ -75,7 +74,7 @@ describe(GoogleSheets::class, function () {
 
         context('when exception is thrown by service', function () {
             it('returns failure message containing details on the exception', function () {
-                allow($this->service->spreadsheets_values)->toReceive('call')->andRun(function () {
+                allow($this->service->spreadsheets_values)->toReceive('append')->andRun(function () {
                     throw new \Google\Exception('something went wrong');
                 });
                 expect($this->publisher->publish('V10', 87.9))->toEqual(
