@@ -70,12 +70,18 @@ class GoogleSheets implements Publisher
     {
         $client = new Google_Client();
         $client->setScopes(Google_Service_Sheets::SPREADSHEETS);
-        $client->setAuthConfig(json_decode(getenv(self::API_CREDENTIALS_ENV), true));
+        $client->setAuthConfig($this->getAuthConfig());
         $client->setAccessType('offline');
         $client->setPrompt('select_account consent');
         $this->setAccessTokenFromEnv($client);
         $client->isAccessTokenExpired() && $this->refreshAccessToken($client);
         return $client;
+    }
+
+    private function getAuthConfig()
+    {
+        $json = getenv(self::API_CREDENTIALS_ENV);
+        return preg_match('/^1\./', Google_Client::LIBVER) ? $json : json_decode($json, true);
     }
 
     private function setAccessTokenFromEnv(Google_Client $client)
