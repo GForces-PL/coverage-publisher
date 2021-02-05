@@ -1,7 +1,7 @@
 {
   "name": "gforces-pl/coverage-publisher",
   "require": {
-    "php": ">=5.4.0",
+    "php": ">=5.3.3",
     "google/apiclient": ">=2.8.3"
   },
   "require-dev": {
