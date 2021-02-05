@@ -15,6 +15,6 @@ class Xml
     {
         $xml = simplexml_load_file($path);
         $metrics = $xml->project->metrics;
-        return new Result($metrics[self::COVERED_LINES], $metrics[self::ALL_LINES]);
+        return new Result((int) $metrics[self::COVERED_LINES], (int) $metrics[self::ALL_LINES]);
     }
 }
